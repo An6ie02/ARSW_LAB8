@@ -33,10 +33,11 @@ var app = (function () {
         var socket = new SockJS('/stompendpoint');
         stompClient = Stomp.over(socket);
         
+        var topicId = document.getElementById("topicId").value;
         //subscribe to /topic/TOPICXX when connections succeed
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/newpoint', function (eventbody) {
+            stompClient.subscribe('/topic/newpoint.' + topicId, function (eventbody) {
                 var newPoint = JSON.parse(eventbody.body);
                 addPointToCanvas(newPoint);
                 // alert("New point: " + newPoint.x + " " + newPoint.y);
@@ -58,15 +59,20 @@ var app = (function () {
                 });
             }
             //websocket connection
-            connectAndSubscribe();
+            var connectBtn = document.getElementById("connectButton");
+            connectBtn.addEventListener('click', function () {
+                var ctx = can.getContext("2d");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                connectAndSubscribe();
+            });
         },
 
         publishPoint: function(px,py){
             var pt=new Point(px,py);
             console.info("publishing point at "+pt);
-            
+            var topicId = document.getElementById("topicId").value;
             //publicar el evento
-            stompClient.send("/topic/newpoint", {}, JSON.stringify(pt)); 
+            stompClient.send("/topic/newpoint." + topicId, {}, JSON.stringify(pt)); 
         },
 
         disconnect: function () {
